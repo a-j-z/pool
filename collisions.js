@@ -18,7 +18,14 @@ function setup()
 	document.body.addEventListener("mousedown", function(e) {
 		mouseDown = true;
 	});
+	document.body.addEventListener("touchstart", function(e) {
+		mouseDown = true;
+	});
+
 	document.body.addEventListener("mouseup", function(e) {
+		mouseDown = false;
+	});
+	document.body.addEventListener("touchend", function(e) {
 		mouseDown = false;
 	});
 }
