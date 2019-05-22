@@ -22,8 +22,8 @@ function setup()
 	document.body.addEventListener("touchstart", function(e) {
 		var rect = c.getBoundingClientRect();
 		mouseDown = true;
-		mouseX = e.targetTouches[0].pageX - rect.left;
-		mouseY = e.targetTouches[0].pageY - rect.top;
+		mouseX = e.targetTouches[0].clientX - rect.left;
+		mouseY = e.targetTouches[0].clientY - rect.top;
 	});
 
 	document.body.addEventListener("mouseup", function(e) {
