@@ -15,11 +15,15 @@ function setup()
 		mouseY = e.clientY - rect.top;
 	});
 
+
 	document.body.addEventListener("mousedown", function(e) {
 		mouseDown = true;
 	});
 	document.body.addEventListener("touchstart", function(e) {
+		var rect = c.getBoundingClientRect();
 		mouseDown = true;
+		mouseX = e.originalEvent.touches[0].pageX - rect.left;
+		mouseY = e.originalEvent.touches[0].pageY - rect.top
 	});
 
 	document.body.addEventListener("mouseup", function(e) {
