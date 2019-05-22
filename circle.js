@@ -16,11 +16,14 @@ class Circle
 
 	draw(ctx)
 	{
-
 		if (this.isStriped)
 		{
-			ctx.strokeStyle = this.color;
 			ctx.fillStyle = "rgb(255,255,255)";
+			ctx.beginPath();
+			ctx.arc(this.x, this.y, this.r - ctx.lineWidth / 2.0,0,2*Math.PI);
+			ctx.fill();
+
+			ctx.strokeStyle = this.color;
 			ctx.lineWidth = 6;
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.r - ctx.lineWidth / 2.0,0,2*Math.PI);

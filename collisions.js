@@ -2,7 +2,7 @@ var c = document.getElementById("Collisions");
 var ctx = c.getContext("2d");
 var frame, circles, holes, friction, gravity, canShoot, mouseX, mouseY, mouseDown = false;
 var markedForDeletion, shots;
-c.style.backgroundColor = "FFFFFF";
+c.style.backgroundColor = "EEEEEE";
 
 function setup()
 {
@@ -272,7 +272,7 @@ function drawInstructions()
 	ctx.textAlign = "center";
 	if (checkShoot())
 	{
-		ctx.fillStyle = "rgb(200,200,200)";
+		ctx.fillStyle = "rgb(180,180,180)";
 		ctx.font = "30px Arial";
 		ctx.fillText("Click to shoot.", 220, 40);
 		ctx.font = "15px Arial";
@@ -344,7 +344,7 @@ function move()
 
 	ctx.font = "200px Arial";
 	ctx.textAlign = "center";
-	ctx.fillStyle = "rgb(240,240,240)";
+	ctx.fillStyle = "rgb(220,220,220)";
 	ctx.fillText("" + shots, 400, 270);
 
 	for (var i = 0; i < holes.length; i++)
