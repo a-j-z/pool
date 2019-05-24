@@ -217,10 +217,14 @@ function checkCircleHoleCollision(c, h)
 	if (dist < Math.pow(h.r * 1.5, 2))
 	{
 		var changeVelX = (h.x - c.x) * gravity * (1 / Math.pow(dist * 0.01, 2));
-		if (Math.abs(changeVelX) < 5.0) c.velX += changeVelX;
+		if (Math.abs(changeVelX) <= 1.0) c.velX += changeVelX;
+		else if (changeVelX > 1.0) c.velX += 1.0;
+		else if (changeVelX < -1.0) c.velX += -1.0;
 
 		var changeVelY = (h.y - c.y) * gravity * (1 / Math.pow(dist * 0.01, 2));
-		if (Math.abs(changeVelY) < 5.0) c.velY += changeVelY;
+		if (Math.abs(changeVelY) <= 1.0) c.velY += changeVelY;
+		else if (changeVelY > 1.0) c.velY += 1.0;
+		else if (changeVelY < -1.0) c.velY += -1.0;
 	}
 	var speed = Math.pow(c.velX, 2) + Math.pow(c.velY, 2)
 	if (dist < Math.pow(h.r * 0.25, 2))
