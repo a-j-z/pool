@@ -1,7 +1,7 @@
 var c = document.getElementById("Collisions");
 var ctx = c.getContext("2d");
 var frame, circles, holes, friction, gravity, canShoot, mouseX, mouseY, mouseDown = false;
-var markedForDeletion, shots;
+var markedForDeletion, shots, animations, placeCueBall;
 c.style.backgroundColor = "EEEEEE";
 
 function setup()
@@ -37,12 +37,13 @@ function setup()
 function initialize()
 {
 	canShoot = true;
+	placeCueBall = false;
 	frame = 0;
 	circles = [];
 	holes = [];
 	markedForDeletion = [];
 	shots = 0;
-
+	animations = [];
 
 
 	holes.push(new Hole(770,30,15));
@@ -263,6 +264,7 @@ function updatePosition(c0)
 
 function checkShoot()
 {
+	if (placeCueBall) return false;
 	for (var i = 0; i < circles.length; i++)
 	{
 		if (circles[i].velX != 0 || circles[i].velY != 0) return false;
@@ -274,7 +276,15 @@ function checkShoot()
 function drawInstructions()
 {
 	ctx.textAlign = "center";
-	if (checkShoot())
+	if (placeCueBall)
+	{
+		ctx.fillStyle = "rgb(200,0,0)";
+		ctx.font = "30px Arial";
+		ctx.fillText("Place cue ball.", 220, 40);
+		ctx.font = "15px Arial";
+		ctx.fillText("Click where you would like to place it.", 220, 60);
+	}
+	else if (checkShoot())
 	{
 		ctx.fillStyle = "rgb(180,180,180)";
 		ctx.font = "30px Arial";
@@ -292,15 +302,75 @@ function drawInstructions()
 	}
 }
 
+function drawSingleGuide(x,y)
+{
+	ctx.fillStyle = "rgb(0,0,0)"
+	ctx.beginPath();
+	ctx.arc(x, y, 2, 0, 2*Math.PI);
+	ctx.fill();
+}
+
+function drawGuides()
+{
+	drawSingleGuide(5,5);
+	drawSingleGuide(100,5);
+	drawSingleGuide(200,5);
+	drawSingleGuide(300,5);
+	drawSingleGuide(400,5);
+	drawSingleGuide(500,5);
+	drawSingleGuide(600,5);
+	drawSingleGuide(700,5);
+	drawSingleGuide(795,5);
+	drawSingleGuide(795,100);
+	drawSingleGuide(795,200);
+	drawSingleGuide(795,300);
+	drawSingleGuide(5,395);
+	drawSingleGuide(100,395);
+	drawSingleGuide(200,395);
+	drawSingleGuide(300,395);
+	drawSingleGuide(400,395);
+	drawSingleGuide(500,395);
+	drawSingleGuide(600,395);
+	drawSingleGuide(700,395);
+	drawSingleGuide(795,395);
+	drawSingleGuide(5,100);
+	drawSingleGuide(5,200);
+	drawSingleGuide(5,300);
+}
+
 function move()
 {
 	ctx.clearRect(0, 0, c.width, c.height);
 
-	if (mouseDown && checkShoot())
+	if (checkShoot() && mouseDown && Math.pow(circles[0].r, 2) < Math.pow(mouseX - circles[0].x, 2) + Math.pow(mouseY - circles[0].y, 2))
 	{
 		circles[0].velX = (mouseX - circles[0].x) / 20.0;
 		circles[0].velY = (mouseY - circles[0].y) / 20.0;
-		shots++;
+		animations.push(new Animation("score", "rgb(0,0,0)", 400, 150, "take shot -1"));
+		shots--;
+	}
+	else if (mouseDown && placeCueBall && mouseX < 185 && mouseX > 15 && mouseY > 15 && mouseY < 385)
+	{
+		console.log("Hello");
+		circles[0].x = mouseX;
+		circles[0].y = mouseY;
+		placeCueBall = false;
+		circles[0].velX = 0;
+		circles[0].velY = 0;
+	}
+
+	if (placeCueBall)
+	{
+		ctx.fillStyle = "rgba(255,0,0,0.2)";
+		ctx.beginPath();
+		ctx.rect(200,0,600,400);
+		ctx.fill();
+
+		ctx.strokeStyle = "rgb(0,0,0,0.3)";
+		ctx.lineWidth = 4;
+		ctx.beginPath();
+		ctx.arc(mouseX, mouseY, 13, 0, 2*Math.PI);
+		ctx.stroke();
 	}
 
 	for (var i = 1; i < circles.length; i++)
@@ -345,17 +415,23 @@ function move()
 
 
 	drawInstructions();
+	drawGuides();
 
 	ctx.font = "200px Arial";
 	ctx.textAlign = "center";
-	ctx.fillStyle = "rgb(220,220,220)";
+	if (placeCueBall) ctx.fillStyle = "rgb(220,170,170)";
+	else ctx.fillStyle = "rgb(220,220,220)";
 	ctx.fillText("" + shots, 400, 270);
 
 	for (var i = 0; i < holes.length; i++)
 	{
 		holes[i].draw(ctx);
 	}
-	for (var i = 0; i < circles.length; i++)
+	for (var i = 0; i < animations.length; i++)
+	{
+		animations[i].draw(ctx);
+	}
+	for (var i = 0 + placeCueBall; i < circles.length; i++)
 	{
 		updatePosition(circles[i]);
 		if (!markedForDeletion.includes(i)) circles[i].draw(ctx);
@@ -363,13 +439,28 @@ function move()
 	
 
 	
-	if (markedForDeletion.includes(0)) initialize();
-	else {
-		for (var i = markedForDeletion.length - 1; i > -1; i--)
-		{
-			circles.splice(markedForDeletion[i],1);
-		}
-		markedForDeletion = [];
+	if (markedForDeletion.includes(0) && !placeCueBall)
+	{
+		animations.push(new Animation("score", "rgb(200,0,0)", 400, 150, "sunk cue ball -2"));
+		shots -= 2;
+		placeCueBall = true;
+	}
+	
+	for (var i = markedForDeletion.length - 1; i > -1 + placeCueBall; i--)
+	{
+		animations.push(new Animation("explosion",
+			circles[markedForDeletion[i]].color,
+			circles[markedForDeletion[i]].x,
+			circles[markedForDeletion[i]].y));
+		animations.push(new Animation("score", "rgb(0,150,0)", 400, 150, "score! +2"));
+		shots += 2;
+		circles.splice(markedForDeletion[i],1);
+	}
+	markedForDeletion = [];
+
+	for (var i = animations.length - 1; i > -1; i--)
+	{
+		if (animations[i].frame > 60) animations.splice(i,1);
 	}
 
 
