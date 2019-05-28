@@ -38,6 +38,10 @@ function setup()
 function initialize()
 {
 	menu = 1;
+}
+
+function setGame()
+{
 	gameOver = false;
 	canShoot = true;
 	placeCueBall = false;
@@ -48,15 +52,12 @@ function initialize()
 	shots = 0;
 	animations = [];
 
-
 	holes.push(new Hole(770,30,15));
 	holes.push(new Hole(30,30,15));
 	holes.push(new Hole(770,370,15));
 	holes.push(new Hole(30,370,15));
 	holes.push(new Hole(400,30,15));
 	holes.push(new Hole(400,370,15));
-
-
 
 	circles.push(new Circle(200, 200, 0, 0, 15, 1, true, "rgb(255,255,255)", "", false));
 
@@ -496,11 +497,16 @@ function move()
 			if (animations[i].frame > 60) animations.splice(i,1);
 		}
 
-		if (circles.length == 1 && circles[0].label == "") gameOver = true;
+		if (circles.length == 1 && circles[0].label == "")
+		{
+			menuTransition = true;
+			circles = [];
+			gameOver = true;
+		}
 
 		if (gameOver)
 		{
-			ctx.fillStyle = "rgba(0,0,0,0.5)"
+			ctx.fillStyle = "rgba(0,0,0,0.7)"
 			ctx.beginPath();
 			ctx.rect(0,0,800,400);
 			ctx.fill();
@@ -509,6 +515,16 @@ function move()
 			ctx.textAlign = "center";
 			ctx.fillStyle = "rgb(255,255,255)";
 			ctx.fillText("" + shots, 400, 270);
+
+			ctx.font = "20px Arial";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "rgb(255,255,255)";
+			ctx.fillText("Click to return to the front page.", 400, 330);
+
+			if (mouseDown && !menuTransition) 
+			{
+				menu = 1;
+			}
 		}
 	}
 
@@ -548,6 +564,7 @@ function move()
 			menu = 0;
 			gameOver = false;
 			menuTransition = true;
+			setGame();
 		}
 	}
 
