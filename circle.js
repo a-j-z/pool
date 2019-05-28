@@ -24,7 +24,7 @@ class Circle
 			ctx.fill();
 
 			ctx.strokeStyle = this.color;
-			ctx.lineWidth = 6;
+			ctx.lineWidth = this.r * 0.4;
 			ctx.beginPath();
 			ctx.arc(this.x, this.y, this.r - ctx.lineWidth / 2.0,0,2*Math.PI);
 			ctx.stroke();
@@ -55,7 +55,7 @@ class Circle
 		{
 			ctx.fillStyle = "rgb(0,0,0)";
 		}
-		ctx.font = "10px Arial";
-		ctx.fillText(this.label, this.x, this.y + 4);
+		ctx.font = "" + (this.r * 2 / 3) + "px Arial";
+		ctx.fillText(this.label, this.x, this.y + this.r / 3.75);
 	}
 }

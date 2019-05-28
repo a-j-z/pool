@@ -2,6 +2,7 @@ var c = document.getElementById("Collisions");
 var ctx = c.getContext("2d");
 var frame, circles, holes, friction, gravity, canShoot, mouseX, mouseY, mouseDown = false;
 var markedForDeletion, shots, animations, placeCueBall;
+var menu, menuTransition, gameOver;
 c.style.backgroundColor = "EEEEEE";
 
 function setup()
@@ -36,6 +37,8 @@ function setup()
 
 function initialize()
 {
+	menu = 1;
+	gameOver = false;
 	canShoot = true;
 	placeCueBall = false;
 	frame = 0;
@@ -55,7 +58,7 @@ function initialize()
 
 
 
-	circles.push(new Circle(150, 200, 0, 0, 15, 1, true, "rgb(255,255,255)", "", false));
+	circles.push(new Circle(200, 200, 0, 0, 15, 1, true, "rgb(255,255,255)", "", false));
 
 	circles.push(new Circle(600, 200, 0, 0, 15, 1, true, "rgb(255,225,30)", "1", false));
 	circles.push(new Circle(630, 217, 0, 0, 15, 1, true, "rgb(255,225,30)", "9", true));
@@ -264,7 +267,7 @@ function updatePosition(c0)
 
 function checkShoot()
 {
-	if (placeCueBall) return false;
+	if (menuTransition) return false;
 	for (var i = 0; i < circles.length; i++)
 	{
 		if (circles[i].velX != 0 || circles[i].velY != 0) return false;
@@ -272,11 +275,23 @@ function checkShoot()
 	return true;
 }
 
+function placementColliding()
+{
+	for (var i = 1; i < circles.length; i++)
+	{
+		if (Math.pow(circles[i].r * 2, 2) > Math.pow(mouseX - circles[i].x, 2) + Math.pow(mouseY - circles[i].y, 2))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 
 function drawInstructions()
 {
 	ctx.textAlign = "center";
-	if (placeCueBall)
+	if (placeCueBall && checkShoot())
 	{
 		ctx.fillStyle = "rgb(200,0,0)";
 		ctx.font = "30px Arial";
@@ -342,127 +357,199 @@ function move()
 {
 	ctx.clearRect(0, 0, c.width, c.height);
 
-	if (checkShoot() && mouseDown && Math.pow(circles[0].r, 2) < Math.pow(mouseX - circles[0].x, 2) + Math.pow(mouseY - circles[0].y, 2))
+	if (!mouseDown)
 	{
-		circles[0].velX = (mouseX - circles[0].x) / 20.0;
-		circles[0].velY = (mouseY - circles[0].y) / 20.0;
-		animations.push(new Animation("score", "rgb(0,0,0)", 400, 150, "take shot -1"));
-		shots--;
-	}
-	else if (mouseDown && placeCueBall && mouseX < 185 && mouseX > 15 && mouseY > 15 && mouseY < 385)
-	{
-		console.log("Hello");
-		circles[0].x = mouseX;
-		circles[0].y = mouseY;
-		placeCueBall = false;
-		circles[0].velX = 0;
-		circles[0].velY = 0;
+		menuTransition = false;
 	}
 
-	if (placeCueBall)
+	if (menu == 0)
 	{
-		ctx.fillStyle = "rgba(255,0,0,0.2)";
-		ctx.beginPath();
-		ctx.rect(200,0,600,400);
-		ctx.fill();
-
-		ctx.strokeStyle = "rgb(0,0,0,0.3)";
-		ctx.lineWidth = 4;
-		ctx.beginPath();
-		ctx.arc(mouseX, mouseY, 13, 0, 2*Math.PI);
-		ctx.stroke();
-	}
-
-	for (var i = 1; i < circles.length; i++)
-	{
-		for (var j = 0; j < i; j++)
+		if (placeCueBall)
 		{
-			if (!circles[i].isDynamic && !circles[j].isDynamic)
+			circles[0].velX = 0;
+			circles[0].velY = 0;
+			if (checkShoot())
 			{
-				checkStaticCollision(circles[i], circles[j]);
+				ctx.strokeStyle = "rgba(255,0,0,0.2)";
+				ctx.lineWidth = 4;
+				ctx.setLineDash([10,5]);
+				ctx.beginPath();
+				ctx.rect(2,2,198,396);
+				ctx.stroke();
+				ctx.setLineDash([]);
+
+				ctx.strokeStyle = "rgb(0,0,0,0.3)";
+				ctx.lineWidth = 4;
+				ctx.beginPath();
+				ctx.arc(mouseX, mouseY, 13, 0, 2*Math.PI);
+				ctx.stroke();
 			}
-			else if (!circles[i].isDynamic || !circles[j].isDynamic)
+		}
+
+		drawInstructions();
+		drawGuides();
+
+		if (checkShoot() && mouseDown && !gameOver() && Math.pow(circles[0].r, 2) < Math.pow(mouseX - circles[0].x, 2) + Math.pow(mouseY - circles[0].y, 2) && !placeCueBall)
+		{
+			circles[0].velX = (mouseX - circles[0].x) / 20.0;
+			circles[0].velY = (mouseY - circles[0].y) / 20.0;
+			animations.push(new Animation("score", "rgb(0,0,0)", 400, 150, "take shot +1"));
+			shots++;
+		}
+		else if (mouseDown && checkShoot() && placeCueBall && mouseX < 185 && mouseX > 15 && mouseY > 15 && mouseY < 385 && !placementColliding())
+		{
+			circles[0].x = mouseX;
+			circles[0].y = mouseY;
+			circles[0].velX = 0;
+			circles[0].velY = 0;
+			placeCueBall = false;
+			
+		}
+
+		for (var i = 1; i < circles.length; i++)
+		{
+			for (var j = 0; j < i; j++)
 			{
-				if (!circles[i].isDynamic)
+				if (!circles[i].isDynamic && !circles[j].isDynamic)
 				{
-					checkStaticDynamicCollision(circles[j], circles[i]);
+					checkStaticCollision(circles[i], circles[j]);
+				}
+				else if (!circles[i].isDynamic || !circles[j].isDynamic)
+				{
+					if (!circles[i].isDynamic)
+					{
+						checkStaticDynamicCollision(circles[j], circles[i]);
+					}
+					else
+					{
+						checkStaticDynamicCollision(circles[i], circles[j]);
+					}
 				}
 				else
 				{
-					checkStaticDynamicCollision(circles[i], circles[j]);
+					checkDynamicCollision(circles[i], circles[j]);
+					checkStaticCollision(circles[i], circles[j]);
 				}
 			}
-			else
-			{
-				checkDynamicCollision(circles[i], circles[j]);
-				checkStaticCollision(circles[i], circles[j]);
-			}
 		}
-	}
 
 
-	for (var i = 0; i < circles.length; i++)
-	{
-		for (var j = 0; j < holes.length; j++)
+		for (var i = 0; i < circles.length; i++)
 		{
-			if (checkCircleHoleCollision(circles[i], holes[j]))
+			for (var j = 0; j < holes.length; j++)
 			{
-				markedForDeletion.push(i);
+				if (checkCircleHoleCollision(circles[i], holes[j]))
+				{
+					markedForDeletion.push(i);
+				}
 			}
+			
+		}
+
+
+		ctx.font = "200px Arial";
+		ctx.textAlign = "center";
+		ctx.fillStyle = "rgb(220,220,220)";
+		ctx.fillText("" + shots, 400, 270);
+
+		for (var i = 0; i < holes.length; i++)
+		{
+			holes[i].draw(ctx);
+		}
+		for (var i = 0; i < animations.length; i++)
+		{
+			animations[i].draw(ctx);
+		}
+		for (var i = 0; i < circles.length; i++)
+		{
+			if (!(i == 0 && markedForDeletion.includes(0))) updatePosition(circles[i]);
+			if (!markedForDeletion.includes(i)) circles[i].draw(ctx);
 		}
 		
+
+		
+		if (markedForDeletion.includes(0) && !placeCueBall)
+		{
+			animations.push(new Animation("score", "rgb(200,0,0)", 400, 150, "sunk cue ball +2"));
+			circles[0].velX = 0;
+			circles[0].velY = 0;
+			shots += 2;
+			placeCueBall = true;
+		}
+		
+		for (var i = markedForDeletion.length - 1; i > -1; i--)
+		{
+			if (markedForDeletion[i] != 0)
+			{
+				animations.push(new Animation("explosion",
+				circles[markedForDeletion[i]].color,
+				circles[markedForDeletion[i]].x,
+				circles[markedForDeletion[i]].y));
+				animations.push(new Animation("score", "rgb(0,150,0)", 400, 150, "score!"));
+				circles.splice(markedForDeletion[i],1);
+			}
+		}
+		markedForDeletion = [];
+
+		for (var i = animations.length - 1; i > -1; i--)
+		{
+			if (animations[i].frame > 60) animations.splice(i,1);
+		}
+
+		if (circles.length == 1 && circles[0].label == "") gameOver = true;
+
+		if (gameOver)
+		{
+			ctx.fillStyle = "rgba(0,0,0,0.5)"
+			ctx.beginPath();
+			ctx.rect(0,0,800,400);
+			ctx.fill();
+
+			ctx.font = "200px Arial";
+			ctx.textAlign = "center";
+			ctx.fillStyle = "rgb(255,255,255)";
+			ctx.fillText("" + shots, 400, 270);
+		}
 	}
 
-
-	drawInstructions();
-	drawGuides();
-
-	ctx.font = "200px Arial";
-	ctx.textAlign = "center";
-	if (placeCueBall) ctx.fillStyle = "rgb(220,170,170)";
-	else ctx.fillStyle = "rgb(220,220,220)";
-	ctx.fillText("" + shots, 400, 270);
-
-	for (var i = 0; i < holes.length; i++)
+	else if (menu == 1)
 	{
-		holes[i].draw(ctx);
-	}
-	for (var i = 0; i < animations.length; i++)
-	{
-		animations[i].draw(ctx);
-	}
-	for (var i = 0 + placeCueBall; i < circles.length; i++)
-	{
-		updatePosition(circles[i]);
-		if (!markedForDeletion.includes(i)) circles[i].draw(ctx);
-	}
-	
+		ctx.font = "100px Arial";
+		ctx.textAlign = "left";
+		ctx.fillStyle = "rgb(50,75,100)";
+		ctx.fillText("Pool", 50, 100);
 
-	
-	if (markedForDeletion.includes(0) && !placeCueBall)
-	{
-		animations.push(new Animation("score", "rgb(200,0,0)", 400, 150, "sunk cue ball -2"));
-		shots -= 2;
-		placeCueBall = true;
-	}
-	
-	for (var i = markedForDeletion.length - 1; i > -1 + placeCueBall; i--)
-	{
-		animations.push(new Animation("explosion",
-			circles[markedForDeletion[i]].color,
-			circles[markedForDeletion[i]].x,
-			circles[markedForDeletion[i]].y));
-		animations.push(new Animation("score", "rgb(0,150,0)", 400, 150, "score! +2"));
-		shots += 2;
-		circles.splice(markedForDeletion[i],1);
-	}
-	markedForDeletion = [];
+		ctx.font = "50px Arial";
+		ctx.fillStyle = "rgb(75,75,75)";
+		ctx.fillText("Rules", 50, 175);
 
-	for (var i = animations.length - 1; i > -1; i--)
-	{
-		if (animations[i].frame > 60) animations.splice(i,1);
-	}
+		ctx.font = "25px Arial";
+		ctx.fillStyle = "rgb(25,25,25)";
+		ctx.fillText("Pocket every ball in the fewest moves.", 75, 210);
+		ctx.fillText("Do not pocket the cue ball.", 75, 245);
 
+		circle1 = new Circle(600, 200, 0, 0, 50, 1, true, "rgb(50,50,50)", "8", false);
+		circle1.draw(ctx);
+		circle2 = new Circle(675, 275, 0, 0, 50, 1, true, "rgb(255,150,35)", "13", true);
+		circle2.draw(ctx);
+
+		ctx.fillStyle = "rgb(150,150,150)";
+		ctx.beginPath();
+		ctx.rect(200,300,300,80);
+		ctx.fill();
+
+		ctx.font = "50px Arial";
+		ctx.fillStyle = "rgb(255,255,255)";
+		ctx.textAlign = "center";
+		ctx.fillText("Begin", 350, 355);
+
+		if (mouseDown && mouseX > 200 && mouseX < 500 && mouseY > 300 && mouseY < 380)
+		{
+			menu = 0;
+			gameOver = false;
+			menuTransition = true;
+		}
+	}
 
 	frame++;
 }
