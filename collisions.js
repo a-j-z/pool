@@ -389,7 +389,7 @@ function move()
 		drawInstructions();
 		drawGuides();
 
-		if (checkShoot() && mouseDown && !gameOver() && Math.pow(circles[0].r, 2) < Math.pow(mouseX - circles[0].x, 2) + Math.pow(mouseY - circles[0].y, 2) && !placeCueBall)
+		if (checkShoot() && mouseDown && !gameOver && Math.pow(circles[0].r, 2) < Math.pow(mouseX - circles[0].x, 2) + Math.pow(mouseY - circles[0].y, 2) && !placeCueBall)
 		{
 			circles[0].velX = (mouseX - circles[0].x) / 20.0;
 			circles[0].velY = (mouseY - circles[0].y) / 20.0;
